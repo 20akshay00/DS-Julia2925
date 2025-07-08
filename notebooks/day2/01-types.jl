@@ -22,7 +22,7 @@ using PlutoUI; TableOfContents()
 # ╔═╡ e9576706-600e-11eb-1e10-e3bac02a254e
 # edit the code below to set your name and UGent username
 
-student = (name = "Hanne Janssen", email = "Hanne.Janssen@UGent.be");
+student = (name = "Akshay Shankar", email = "Akshay.Shankar@UGent.be");
 
 # press the ▶ button in the bottom right of this cell to run your edits
 # or use Shift+Enter
@@ -69,16 +69,16 @@ typeof(A)
 """
 
 # ╔═╡ b844d568-4e73-11eb-3de9-4158b0bdca12
-
+typeof(a)
 
 # ╔═╡ c662744a-4e73-11eb-1bfc-6daaf7282285
-
+typeof(s)
 
 # ╔═╡ cae803e2-4e73-11eb-13e0-23abccf86bac
-
+typeof(n)
 
 # ╔═╡ cc606026-4e73-11eb-3576-5d301a771a5a
-
+typeof(A)
 
 # ╔═╡ d3803112-4e73-11eb-2018-f72ffb7f6ec6
 md"These are all *concrete types*. Julia types are part of a hierarchical type system, forming a single, fully connected type graph. The concrete types are the leaves of this tree, whereas the inner nodes are *abstract types*. As hinted by the name, these are abstract and cannot be instantiated. They, however, help with conceptually ordering the type system."
@@ -87,7 +87,7 @@ md"These are all *concrete types*. Julia types are part of a hierarchical type s
 md"What is the type of `pi`?"
 
 # ╔═╡ f533012c-4e78-11eb-0f45-3b47f088c9c6
-typeofpi = missing
+typeofpi = typeof(π)
 
 # ╔═╡ f69d89ba-4e73-11eb-3ab9-9179ea7e3217
 md"Concrete types (should) have a well-defined memory layout, for example `Float64` is  encoded using 64 bits while `Float32` is encoded using 32 bits and hence some computations can be executed quicker but less precise by the former. Abstract types on the other hand mainly encode a semantic meaning, any `Real` should behave as a real number (e.g., addition, division are defined)."
@@ -115,22 +115,36 @@ supertype(Any)
 """
 
 # ╔═╡ e1c8cf4a-4e73-11eb-27be-d702064a0182
-
+supertype(Int8)
 
 # ╔═╡ e56a46c6-4e73-11eb-1748-1b6fe5ab0376
-
+supertype(Float64)
 
 # ╔═╡ e89adcaa-4e73-11eb-1ed8-e9c89ca633f6
-
+supertype(AbstractFloat)
 
 # ╔═╡ ec2ab2be-4e73-11eb-1a22-010439761432
-
+supertype(Real)
 
 # ╔═╡ efa205b4-4e73-11eb-1647-e9dcab5f7b7a
-
+supertype(Number)
 
 # ╔═╡ f3b5a778-4e73-11eb-1d3c-11ae19713eca
+supertype(Any)
 
+# ╔═╡ 5fa42caa-dbfd-459c-babd-d7532884fd7d
+function type_heirarchy(T::DataType)
+	typetree = DataType[T]
+	while true
+		push!(typetree, supertype(typetree[end]))
+		(typetree[end] == typetree[end-1]) && break
+	end
+
+	println(join(string.(typetree[1:end-1]), " <: "))
+end
+
+# ╔═╡ 9c22a1f6-1f8c-42b0-bf0c-1eb79fe1e013
+type_heirarchy(Int8)
 
 # ╔═╡ a0cecb24-4e74-11eb-3634-cd8dd628e9ec
 md"See how all the numbers are hierarchically represented? Note that any type is always a subtype of `Any`. We can check if an object is (sub)type using the function `isa` or use the `<:` operator."
@@ -158,22 +172,22 @@ If you are confused by the last statement, read the next section.
 """
 
 # ╔═╡ b31fe65a-4e74-11eb-0414-35f2be687c7f
-
+true
 
 # ╔═╡ c2ac0c48-4e74-11eb-10b0-91ad620fefcd
-
+true
 
 # ╔═╡ c5208cce-4e74-11eb-0615-135b510a9e8d
-
+true
 
 # ╔═╡ c817296a-4e74-11eb-0994-972871114f02
-
+true
 
 # ╔═╡ cb066442-4e74-11eb-35e7-ed38d4bd8bbf
-
+false
 
 # ╔═╡ ce3d5380-4e74-11eb-3d9d-5f34cbbae118
-
+false
 
 # ╔═╡ 66343826-6012-11eb-109c-17c7a582cbc8
 
@@ -265,7 +279,7 @@ bunchofnumbers = "1.728002758512114, 0.45540258865644284, 1.4067738604851092, 1.
 "
 
 # ╔═╡ e6f31ad8-4e79-11eb-11f4-2936cb039f8d
-sumofbunchofnumbers = missing
+sumofbunchofnumbers = sum(str -> parse(Float64, str), split(rstrip(bunchofnumbers), ","))
 
 # ╔═╡ 03766a5c-4e75-11eb-12ad-cb2e9468e0d2
 md"""
@@ -292,13 +306,13 @@ md"""
 mynewfun(x) = x^2 .+ x
 
 # ╔═╡ 7c2b6dc0-4e76-11eb-1d78-553df82d9100
-
+@time mynewfun(1)
 
 # ╔═╡ d2a4a32c-5b02-11eb-3839-8108c4965931
-
+@time mynewfun(1.)
 
 # ╔═╡ 32d64b6e-4e75-11eb-0a2a-27214f217f70
-
+@time mynewfun(A)
 
 # ╔═╡ 861ba4c6-4e76-11eb-3d2b-bfabbd143df2
 md"The known methods can be found using the function `methods`. For example, look how many methods are defined for sum:"
@@ -316,7 +330,7 @@ md"""
 		"""
 
 # ╔═╡ b18d0532-4e76-11eb-2e8a-2bee580533cc
-
+println(methods(*))
 
 # ╔═╡ b3d15950-6015-11eb-1909-c127822a4a83
 
@@ -405,34 +419,34 @@ md"""
 		"""
 
 # ╔═╡ 76fe9fc4-4e77-11eb-3bc7-2dfbdff8dfc8
-
+5.0
 
 # ╔═╡ 7aa14c94-4e77-11eb-25c7-fb0103267b06
-
+-1.0
 
 # ╔═╡ 7f3a5336-4e77-11eb-2ad6-3d889dc75ac0
-
+4
 
 # ╔═╡ 822c01d4-4e77-11eb-1409-fbaf83c950b6
-
+0.
 
 # ╔═╡ 85f186a6-4e77-11eb-19ca-5db29615ba97
-
+"No life forms present"
 
 # ╔═╡ 891c820e-4e77-11eb-1ebf-b3065e0d4211
-
+"onetwo"
 
 # ╔═╡ 8d0d39c4-4e77-11eb-034d-07dc33ab6e9a
-
+4.0f0 # Float32
 
 # ╔═╡ 901efaee-4e77-11eb-02d9-b5fe1f0931d5
-
+6
 
 # ╔═╡ 938d8b1e-4e77-11eb-03d3-9b88c7cab3c1
-
+"No life forms present" # Matrix{Int} != Matrix{Float64}
 
 # ╔═╡ 96f6fef2-4e77-11eb-2ec4-399472d86a60
-
+[4 4; 4 4]
 
 # ╔═╡ 812cfe48-4e7a-11eb-32e6-c918bbe3e602
 md"""
@@ -610,18 +624,6 @@ begin
 	play(h1::Type{<:Hand}, h2::Type{<:Hand}) = h1 == h2 ? 0 : -1
 end
 
-# ╔═╡ 4f107d88-4e7d-11eb-3e49-f54ecf5163da
-play(Rock, Rock)
-
-# ╔═╡ 8331c8b0-4e7d-11eb-0690-8bbae3ed086a
-play(Rock, Scissors)
-
-# ╔═╡ 88a95ec0-4e7d-11eb-0a33-77ef82874f45
-play(Scissors, Rock)
-
-# ╔═╡ 925e2f40-4e7d-11eb-0bd2-f91913c5a23e
-play(Scissors, Paper)
-
 # ╔═╡ 629e7829-d214-4406-a082-aa1f82cb539c
 md"""
 > **Optional question: rock, paper, scissors, lizard, Spock**
@@ -634,7 +636,31 @@ adapted from: [source](https://external-content.duckduckgo.com/iu/?u=http%3A%2F%
 """
 
 # ╔═╡ 269b934c-601b-11eb-00ad-5fec0e2c37e1
+begin
+	abstract type Spock <: Hand end
+	abstract type Lizard <: Hand end
+	
+	play(h1::Type{Rock}, h2::Type{Lizard}) = 1
+	play(h1::Type{Lizard}, h2::Type{Spock}) = 1
+	play(h1::Type{Spock}, h2::Type{Scissors}) = 1
+	
+	play(h1::Type{Paper}, h2::Type{Spock}) = 1
+	play(h1::Type{Lizard}, h2::Type{Paper}) = 1
+	play(h1::Type{Spock}, h2::Type{Rock}) = 1
+	play(h1::Type{Scissors}, h2::Type{Lizard}) = 1
+end
 
+# ╔═╡ 4f107d88-4e7d-11eb-3e49-f54ecf5163da
+play(Rock, Rock)
+
+# ╔═╡ 8331c8b0-4e7d-11eb-0690-8bbae3ed086a
+play(Rock, Scissors)
+
+# ╔═╡ 88a95ec0-4e7d-11eb-0a33-77ef82874f45
+play(Scissors, Rock)
+
+# ╔═╡ 925e2f40-4e7d-11eb-0bd2-f91913c5a23e
+play(Scissors, Paper)
 
 # ╔═╡ ce5d564a-f2f3-4b1e-aa70-85253b2ccf38
 md"""## Answers:
@@ -988,6 +1014,8 @@ version = "17.4.0+2"
 # ╠═ec2ab2be-4e73-11eb-1a22-010439761432
 # ╠═efa205b4-4e73-11eb-1647-e9dcab5f7b7a
 # ╠═f3b5a778-4e73-11eb-1d3c-11ae19713eca
+# ╠═5fa42caa-dbfd-459c-babd-d7532884fd7d
+# ╠═9c22a1f6-1f8c-42b0-bf0c-1eb79fe1e013
 # ╟─a0cecb24-4e74-11eb-3634-cd8dd628e9ec
 # ╟─c232463e-233b-449a-befd-306c7d7100d5
 # ╠═b31fe65a-4e74-11eb-0414-35f2be687c7f

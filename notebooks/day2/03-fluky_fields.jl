@@ -19,13 +19,16 @@ end
 # ╔═╡ 4e827046-8787-11ed-1763-99b10d56f7a6
 using PlutoUI, Random;
 
+# ╔═╡ 47b85573-aa0b-418e-a0c2-49eb80cff7e4
+using LinearAlgebra
+
 # ╔═╡ 59c37c98-9a9a-4bbc-9809-26360ead8e45
 using Plots, RecipesBase
 
 # ╔═╡ 347583c6-9ed6-42af-b760-733585dbb7a6
 # edit the code below to set your name and UGent username
 
-student = (name = "Jimmy Janssen", email = "Jimmy.Janssen@UGent.be");
+student = (name = "Akshay Shankar", email = "Akshay.Shankar@UGent.be");
 
 # press the ▶ button in the bottom right of this cell to run your edits
 # or use Shift+Enter
@@ -74,13 +77,45 @@ The problem is that daisy does not know how many seeds to buy. However, she is a
 """
 
 # ╔═╡ 409d0d25-bae3-45ed-9ba1-477fcf928bce
+begin
+	abstract type Shape end
+	
+	struct Circle <: Shape
+		x::Float64
+		y::Float64
+		r::Float64
+	end
 
+	struct Rectangle <: Shape
+		x::Float64
+		y::Float64
+		w::Float64
+		h::Float64
+	end
 
-# ╔═╡ a7fdf0f3-4810-4c9c-8fd5-e144b602d209
-
-
-# ╔═╡ 59949c0b-4a6e-4237-9b1d-5a674f4849bd
-
+	struct Triangle <: Shape
+		x1::Float64
+		y1::Float64
+		x2::Float64
+		y2::Float64
+		x3::Float64
+		y3::Float64
+	end
+	
+	area(shape::Circle) = π * shape.r^2
+	area(shape::Rectangle) = shape.w * shape.h
+	function area(shape::Triangle)
+		a = sqrt((shape.x1 - shape.x2)^2 + (shape.y1 - shape.y2)^2)
+		b = sqrt((shape.x2 - shape.x3)^2 + (shape.y2 - shape.y3)^2)
+		c = sqrt((shape.x3 - shape.x1)^2 + (shape.y3 - shape.y1)^2)
+		
+		s = (a + b + c) / 2
+	    area = sqrt(s * (s - a) * (s - b) * (s - c))
+	    return area
+	end
+	
+	const shape_dict = Dict("circles" => Circle, "rectangles" => Rectangle, "triangles" => Triangle)
+end
 
 # ╔═╡ 3bdf0670-2511-4fd6-be39-8d22c2945d4c
 md"""
@@ -93,17 +128,81 @@ Crisis! Daisy realises that the shapes she has drawn are overlapping and the pre
 > **Optional:** count the number of shapes that lie *completely* in another shape.
 """
 
-# ╔═╡ 5949a413-705d-477b-8091-d517f09095de
-
-
 # ╔═╡ 4a507508-0532-4659-94b4-7a04bdd91fe0
-
-
-# ╔═╡ 4b29599d-d30e-4bdf-a150-d2e47e76908c
-
+begin
+	isdisjoint(c1::Circle, c2::Circle) = ((c1.x - c2.x)^2 + (c1.y - c2.y)^2) > (c1.r + c2.r)^2
+	
+	function isdisjoint(r1::Rectangle, r2::Rectangle)
+		(abs(r1.x - r2.x) > (r1.w + r2.w)/2) || (abs(r1.y - r2.y) > (r1.h + r2.h)/2)
+	end
+end
 
 # ╔═╡ c2055a02-3f86-4b16-936b-927493a89ce8
+function bake(c::Circle; npoints = 100)
+	θ = range(0., 2π, length = npoints)
+	c.x .+ c.r .* cos.(θ), c.y .+ c.r * sin.(θ)
+end
 
+# ╔═╡ 4b29599d-d30e-4bdf-a150-d2e47e76908c
+begin
+	@recipe function plot(c::Circle; npoints = 100)
+	    # set a default value for an attribute with `-->`
+		framestyle --> :none
+		aspect_ratio := :equal
+		
+	    @series begin
+	        # force an argument with `:=`
+	        seriestype := :shape
+			fillalpha := get(plotattributes, :seriesalpha, 0.6)
+			label := ""
+			color := get(plotattributes, :seriescolor, "#529617")
+			linealpha := 0
+
+			bake(c, npoints = npoints)
+	    end
+
+		# @series begin
+	 #        # force an argument with `:=`
+	 #        seriestype := :shape
+		# 	fillalpha := get(plotattributes, :seriesalpha, 0.6)
+		# 	label := ""
+		# 	color := "#e8d5c6"
+		# 	linealpha := 0
+
+		# 	bake(Circle(c.x, c.y, c.r * 0.85), npoints = npoints)
+	 #    end
+
+		# @series begin
+	 #        # force an argument with `:=`
+	 #        seriestype := :shape
+		# 	fillalpha := get(plotattributes, :seriesalpha, 0.6)
+		# 	label := ""
+		# 	color := get(plotattributes, :seriescolor, "#529617")
+		# 	linealpha := 0
+
+		# 	bake(Circle(c.x, c.y, c.r * 0.7), npoints = npoints)
+	 #    end
+	
+		nothing
+	end
+
+	@recipe function plot(r::Rectangle; npoints = 100)
+		# set a default value for an attribute with `-->`
+		framestyle --> :none
+		aspect_ratio := :equal
+		
+		@series begin
+			# force an argument with `:=`
+			seriestype := :shape
+			fillalpha := get(plotattributes, :seriesalpha, 0.6)
+			label := ""
+			color := get(plotattributes, :seriescolor, "#529617")
+			linealpha := 0
+	
+			[r.x - r.w/2, r.x - r.w/2, r.x + r.w/2, r.x + r.w/2], [r.y - r.h/2, r.y + r.h/2, r.y + r.h/2, r.y - r.h/2]
+		end
+	end
+end
 
 # ╔═╡ faf30153-b607-48d1-8db0-1f47e2e1e62e
 md"""
@@ -123,19 +222,31 @@ n_points = 100_000
 points = missing
 
 # ╔═╡ e1a4741f-415d-4a61-8ff5-a8454607d437
+begin
+	Base.in((x, y), c::Circle) = ((x - c.x)^2 + (y - c.y)^2) < c.r^2
+	Base.in((x, y), r::Rectangle) = ((r.x - r.w/2) < x < (r.x + r.w/2)) && ((r.y - r.w/2) < y < (r.y + r.h/2))
+	Base.in((x, y), t::Triangle) = true
 
+	Base.in(c1::Circle, c2::Circle) = ((c1.x - c2.x)^2 + (c1.y - c2.y)^2) < (c2.r - c1.r)
+	Base.in(r1::Rectangle, r2::Rectangle) = all((point in r2) for point in [[r1.x + r1.w/2, r1.y + r1.h/2], [r1.x - r1.w/2, r1.y + r1.h/2], [r1.x + r1.w/2, r1.y - r1.h/2], [r1.x - r1.w/2, r1.y - r1.h/2]])
+end
 
 # ╔═╡ 8f7fb0c4-ba18-4025-b322-62c2d17aced8
+function estimate_total_area(shapes; npoints, xbound = [0, 100], ybound = [0, 100])
+	count = 0
+	
+	for i in 1:npoints
+		point = [xbound[1] + (xbound[2] - xbound[1]) * rand(), ybound[1] + (ybound[2] - ybound[1]) * rand()]
+		for shape in shapes
+			if point in shape
+				count += 1
+				break
+			end
+		end
+	end
 
-
-# ╔═╡ a70e9d92-c098-49e1-bb8f-4adfc55a6c98
-
-
-# ╔═╡ 95fecfbd-6969-498b-b909-ac945a4e9fbd
-
-
-# ╔═╡ b8faefbe-fb08-46cb-b349-5d2fd25cdf05
-
+	return count/npoints
+end
 
 # ╔═╡ 2a772d03-5972-4da5-8da8-adf7626db801
 md"## Data generation ⚙️"
@@ -191,6 +302,54 @@ shapes
 # ╔═╡ de71232a-1498-4db1-8fc3-65a84a93551a
 first(shapes)
 
+# ╔═╡ 299a3ca7-9ebe-48af-ad8c-f67a6c0924c1
+shapes_t = map(shape -> shape_dict[shape_type](shape...), shapes)
+
+# ╔═╡ 0f756d85-0080-4338-92c5-407e36fafa60
+sum(area, shapes_t)
+
+# ╔═╡ 1381130c-f30e-4505-97ff-e6dc7ea0ebf6
+sort(shapes_t, by=area)
+
+# ╔═╡ 99c412bb-26a5-4b2c-afb8-d41a9cc58d8b
+let
+	intersections = ones(Bool, length(shapes_t), length(shapes_t))
+	
+	for i in 1:length(shapes_t)
+		for j in (i+1):length(shapes_t)
+			intersections[i, j] = isdisjoint(shapes_t[i], shapes_t[j])
+		end
+	end
+	
+	count(all.(eachrow(Symmetric(intersections, :U))))
+end
+
+# ╔═╡ c5b46c2d-bd49-4c5b-8c1d-c707a53cda62
+let
+	containments = ones(Bool, length(shapes_t), length(shapes_t))
+	
+	for i in 1:length(shapes_t)
+		for j in 1:length(shapes_t)
+			containments[i, j] = (shapes_t[i] in shapes_t[j])
+		end
+	end
+	
+	count(any.(eachrow(containments)))
+end
+
+# ╔═╡ 3102b512-4d51-4bba-a82d-1116e29b22c0
+let
+	p = plot(shapes_t[1], alpha = 1.)
+	for shape in shapes_t[2:end]
+		plot!(shape, alpha = 1.)
+	end
+	plot!(background_color = "#ec76f0", axis = :nothing)
+	p
+end
+
+# ╔═╡ a70e9d92-c098-49e1-bb8f-4adfc55a6c98
+estimate_total_area(shapes_t, npoints = n_points)
+
 # ╔═╡ 73503bf0-5dc8-4cc5-a636-e6521ef3089e
 md"""
 ## Hints 🧰
@@ -219,6 +378,7 @@ all(iseven, [2, 4, 6, 7])
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -236,7 +396,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.5"
 manifest_format = "2.0"
-project_hash = "50d0f6fe683af60690aecbfa62c154dd5ce74db3"
+project_hash = "4bc20484ff8fd6eb1abe53826cf2c5bf38e70923"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1362,7 +1522,7 @@ version = "1.8.1+0"
 # ╔═╡ Cell order:
 # ╟─b303bde5-a395-43b8-b61f-ba1d13cef1ba
 # ╠═4e827046-8787-11ed-1763-99b10d56f7a6
-# ╠═347583c6-9ed6-42af-b760-733585dbb7a6
+# ╟─347583c6-9ed6-42af-b760-733585dbb7a6
 # ╟─b7e28115-8901-4972-b37f-9b5869735b50
 # ╠═efb5380d-ab9d-4e7e-ad2b-d7beb3e28609
 # ╟─2ff01603-4322-4571-b172-20b9952ff4ff
@@ -1372,23 +1532,25 @@ version = "1.8.1+0"
 # ╠═de71232a-1498-4db1-8fc3-65a84a93551a
 # ╟─4826f7b8-0922-4a2d-abd4-426aa43c293a
 # ╠═409d0d25-bae3-45ed-9ba1-477fcf928bce
-# ╠═a7fdf0f3-4810-4c9c-8fd5-e144b602d209
-# ╠═59949c0b-4a6e-4237-9b1d-5a674f4849bd
+# ╠═299a3ca7-9ebe-48af-ad8c-f67a6c0924c1
+# ╠═0f756d85-0080-4338-92c5-407e36fafa60
+# ╠═1381130c-f30e-4505-97ff-e6dc7ea0ebf6
 # ╟─3bdf0670-2511-4fd6-be39-8d22c2945d4c
-# ╠═5949a413-705d-477b-8091-d517f09095de
 # ╠═4a507508-0532-4659-94b4-7a04bdd91fe0
+# ╠═47b85573-aa0b-418e-a0c2-49eb80cff7e4
+# ╠═99c412bb-26a5-4b2c-afb8-d41a9cc58d8b
+# ╠═c5b46c2d-bd49-4c5b-8c1d-c707a53cda62
 # ╟─8b19a9e4-5701-4e45-85a6-8e9d3b93563f
 # ╠═59c37c98-9a9a-4bbc-9809-26360ead8e45
-# ╠═4b29599d-d30e-4bdf-a150-d2e47e76908c
 # ╠═c2055a02-3f86-4b16-936b-927493a89ce8
+# ╠═4b29599d-d30e-4bdf-a150-d2e47e76908c
+# ╠═3102b512-4d51-4bba-a82d-1116e29b22c0
 # ╟─faf30153-b607-48d1-8db0-1f47e2e1e62e
 # ╠═bc31c109-3a11-46b1-bc5a-5872d0cb73bd
 # ╠═47d9f887-a7e0-42e0-ad27-53b6d5b8adb2
 # ╠═e1a4741f-415d-4a61-8ff5-a8454607d437
 # ╠═8f7fb0c4-ba18-4025-b322-62c2d17aced8
 # ╠═a70e9d92-c098-49e1-bb8f-4adfc55a6c98
-# ╠═95fecfbd-6969-498b-b909-ac945a4e9fbd
-# ╠═b8faefbe-fb08-46cb-b349-5d2fd25cdf05
 # ╟─2a772d03-5972-4da5-8da8-adf7626db801
 # ╠═57f8656f-7c84-47cc-9da1-62c3e74c7769
 # ╠═d5c9526d-5dff-4fb2-8a2c-e96c0229f474
