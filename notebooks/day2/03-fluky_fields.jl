@@ -25,6 +25,9 @@ using LinearAlgebra
 # ╔═╡ 59c37c98-9a9a-4bbc-9809-26360ead8e45
 using Plots, RecipesBase
 
+# ╔═╡ 201ab76e-80ba-4988-9dcd-eed1256baa6c
+using BenchmarkTools
+
 # ╔═╡ 347583c6-9ed6-42af-b760-733585dbb7a6
 # edit the code below to set your name and UGent username
 
@@ -234,18 +237,19 @@ end
 # ╔═╡ 8f7fb0c4-ba18-4025-b322-62c2d17aced8
 function estimate_total_area(shapes; npoints, xbound = [0, 100], ybound = [0, 100])
 	count = 0
-	
+
 	for i in 1:npoints
-		point = [xbound[1] + (xbound[2] - xbound[1]) * rand(), ybound[1] + (ybound[2] - ybound[1]) * rand()]
-		for shape in shapes
-			if point in shape
-				count += 1
-				break
-			end
-		end
+		point = (xbound[1] + (xbound[2] - xbound[1]) * rand(), ybound[1] + (ybound[2] - ybound[1]) * rand())
+		count += any(shape -> point in shape, shapes)
 	end
 
 	return count/npoints
+end
+
+# ╔═╡ 31708a17-2d50-42d9-9691-6d0ee86bca56
+function estimate_total_area_alt(shapes; npoints, xbound = [0, 100], ybound = [0, 100])
+	points = zip(xbound[1] .+ (xbound[2] .- xbound[1]) .* rand(npoints), ybound[1] .+ (ybound[2] .- ybound[1]) .* rand(npoints))
+	count(point -> any(shape -> point in shape, shapes), points) / npoints
 end
 
 # ╔═╡ 2a772d03-5972-4da5-8da8-adf7626db801
@@ -347,8 +351,11 @@ let
 	p
 end
 
-# ╔═╡ a70e9d92-c098-49e1-bb8f-4adfc55a6c98
-estimate_total_area(shapes_t, npoints = n_points)
+# ╔═╡ 83903cbb-94ca-47bd-a586-669e6ae68e18
+@benchmark estimate_total_area($shapes_t, npoints= $n_points)
+
+# ╔═╡ cbf6e26f-16e7-4d4b-a2d0-3c2d54a95803
+@benchmark estimate_total_area_alt($shapes_t, npoints= $n_points)
 
 # ╔═╡ 73503bf0-5dc8-4cc5-a636-e6521ef3089e
 md"""
@@ -378,6 +385,7 @@ all(iseven, [2, 4, 6, 7])
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
@@ -385,6 +393,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
+BenchmarkTools = "~1.6.0"
 Plots = "~1.38.0"
 PlutoUI = "~0.7.55"
 RecipesBase = "~1.3.4"
@@ -396,7 +405,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.5"
 manifest_format = "2.0"
-project_hash = "4bc20484ff8fd6eb1abe53826cf2c5bf38e70923"
+project_hash = "4d0185604747c01394c8a508f2bf74d8437cbcbe"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -421,6 +430,12 @@ version = "1.11.0"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 version = "1.11.0"
+
+[[deps.BenchmarkTools]]
+deps = ["Compat", "JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "e38fbc49a620f5d0b660d7f543db1009fe0f8336"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.6.0"
 
 [[deps.BitFlags]]
 git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
@@ -1031,6 +1046,10 @@ deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 version = "1.11.0"
 
+[[deps.Profile]]
+uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+version = "1.11.0"
+
 [[deps.PtrArrays]]
 git-tree-sha1 = "1d36ef11a9aaf1e8b74dacc6a731dd1de8fd493d"
 uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
@@ -1550,7 +1569,10 @@ version = "1.8.1+0"
 # ╠═47d9f887-a7e0-42e0-ad27-53b6d5b8adb2
 # ╠═e1a4741f-415d-4a61-8ff5-a8454607d437
 # ╠═8f7fb0c4-ba18-4025-b322-62c2d17aced8
-# ╠═a70e9d92-c098-49e1-bb8f-4adfc55a6c98
+# ╠═31708a17-2d50-42d9-9691-6d0ee86bca56
+# ╠═201ab76e-80ba-4988-9dcd-eed1256baa6c
+# ╠═83903cbb-94ca-47bd-a586-669e6ae68e18
+# ╠═cbf6e26f-16e7-4d4b-a2d0-3c2d54a95803
 # ╟─2a772d03-5972-4da5-8da8-adf7626db801
 # ╠═57f8656f-7c84-47cc-9da1-62c3e74c7769
 # ╠═d5c9526d-5dff-4fb2-8a2c-e96c0229f474
